@@ -175,10 +175,10 @@ export default function ListingDetail() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="text-sm font-semibold text-slate-900">{review.reviewer_name ?? 'Pengguna'}</div>
-                      <div className="text-xs text-slate-400">{formatDate(review.created_at)}</div>
+                      <div className="text-xs text-slate-600">{formatDate(review.created_at)}</div>
                     </div>
                     {review.reviewer_email && (
-                      <div className="text-xs text-slate-400">{review.reviewer_email}</div>
+                      <div className="text-xs text-slate-600">{review.reviewer_email}</div>
                     )}
                     <div className="mt-2 flex items-center justify-between">
                       <Stars value={review.rating} />

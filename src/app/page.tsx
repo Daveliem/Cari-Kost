@@ -299,9 +299,9 @@ export default function Home() {
 
             <div className="mt-6 grid gap-4 lg:grid-cols-4">
               <div className="rounded-3xl border border-slate-200 p-5">
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Rentang harga</h3>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Rentang harga</h3>
                 <div className="grid gap-3">
-                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-400">Min</label>
+                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-600">Min</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -310,7 +310,7 @@ export default function Home() {
                     value={filters.priceMin ? Number(filters.priceMin).toLocaleString('id-ID') : ''}
                     onChange={(e) => setFilters({ ...filters, priceMin: e.target.value.replace(/\D/g, '') })}
                   />
-                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-400">Max</label>
+                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-600">Max</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -323,7 +323,7 @@ export default function Home() {
               </div>
 
               <div className="rounded-3xl border border-slate-200 p-5">
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Tipe kamar</h3>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Tipe kamar</h3>
                 <select
                   className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm"
                   value={filters.roomType}
@@ -336,8 +336,8 @@ export default function Home() {
               </div>
 
               <div className="rounded-3xl border border-slate-200 p-5">
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Fasilitas</h3>
-                <div className="mb-4 text-sm text-slate-500">Mode pencarian</div>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Fasilitas</h3>
+                <div className="mb-4 text-sm text-slate-600">Mode pencarian</div>
                 <div className="flex flex-wrap gap-3">
                   <label className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                     <input type="radio" name="amenMode" checked={amenitiesMode === 'and'} onChange={() => setAmenitiesMode('and')} />
@@ -371,7 +371,7 @@ export default function Home() {
               </div>
 
               <div className="rounded-3xl border border-slate-200 p-5">
-                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">Favorit</h3>
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Favorit</h3>
                 <button
                   type="button"
                   onClick={() => setFavoriteOnly(!favoriteOnly)}
@@ -403,7 +403,7 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {displayListings.length === 0 ? (
-              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">
                 {favoriteOnly ? 'Tidak ada kost favorit. Tandai beberapa item terlebih dahulu.' : 'Tidak ada listing yang cocok.'}
               </div>
             ) : (
@@ -424,7 +424,7 @@ export default function Home() {
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="text-xl font-semibold text-slate-900">{listing.title}</h3>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
                             <span>{listing.location}</span>
                             {listing.distanceKm !== undefined && (
                               <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
@@ -436,13 +436,13 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={() => toggleFavorite(listing.id)}
-                          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border text-lg transition ${isFavorite ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300 hover:text-slate-700'}`}
+                          className={`inline-flex h-11 w-11 items-center justify-center rounded-full border text-lg transition ${isFavorite ? 'border-emerald-500 bg-emerald-500 text-white' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'}`}
                           aria-label={isFavorite ? 'Hapus favorit' : 'Tambah favorit'}
                         >
                           {isFavorite ? '★' : '☆'}
                         </button>
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-slate-500">
+                      <div className="flex items-center gap-3 text-sm text-slate-600">
                         <span className="flex items-center gap-1">
                           {renderStars(listing.average_rating ?? 0)}
                         </span>
@@ -452,7 +452,7 @@ export default function Home() {
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-xl font-semibold text-emerald-600">Rp {listing.price.toLocaleString()}</p>
-                          <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Per bulan</p>
+                          <p className="text-xs uppercase tracking-[0.2em] text-slate-600">Per bulan</p>
                         </div>
                         <Link href={`/listing/${listing.id}`} className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
                           Lihat detail
