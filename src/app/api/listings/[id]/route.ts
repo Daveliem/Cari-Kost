@@ -5,7 +5,7 @@ import { verifyToken } from '@/lib/auth';
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const params = await context.params;
-    const listing: any = db.prepare(`
+    const listing: any = await db.prepare(`
       SELECT l.*,
         COALESCE(ROUND(AVG(r.rating), 1), 0) AS average_rating,
         COUNT(r.id) AS review_count
@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const imagePayload = images ? JSON.stringify(images) : JSON.stringify([]);
 
     // Ensure the listing belongs to the user
-    const existing: any = db.prepare('SELECT * FROM listings WHERE id = ?').get(params.id);
+    const existing: any = await db.prepare('SELECT * FROM listings WHERE id = ?').get(params.id);
     if (!existing) {
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }
@@ -51,7 +51,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const stmt = db.prepare(`
       UPDATE listings SET title = ?, description = ?, price = ?, location = ?, latitude = ?, longitude = ?, room_type = ?, amenities = ?, images = ?, contact = ? WHERE id = ?
     `);
-    stmt.run(title, description, price, location, latitude, longitude, room_type, amenities, imagePayload, contact, params.id);
+    await stmt.run(title, description, price, location, latitude, longitude, room_type, amenities, imagePayload, contact, params.id);
 
     return NextResponse.json({ message: 'Listing updated' });
   } catch (error) {
@@ -67,7 +67,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
 
   try {
     const params = await context.params;
-    const existing: any = db.prepare('SELECT * FROM listings WHERE id = ?').get(params.id);
+    const existing: any = await db.prepare('SELECT * FROM listings WHERE id = ?').get(params.id);
     if (!existing) {
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }
@@ -76,13 +76,13 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     }
 
     // Delete associated reviews first (cascade)
-    db.prepare('DELETE FROM reviews WHERE listing_id = ?').run(params.id);
-    db.prepare('DELETE FROM listings WHERE id = ?').run(params.id);
+    await db.prepare('DELETE FROM reviews WHERE listing_id = ?').run(params.id);
+    await db.prepare('DELETE FROM listings WHERE id = ?').run(params.id);
 
     // Insert audit log
     try {
       const details = JSON.stringify({ title: existing.title, price: existing.price, location: existing.location });
-      db.prepare('INSERT INTO audit_logs (action, object_type, object_id, user_id, details) VALUES (?, ?, ?, ?, ?)')
+      await db.prepare('INSERT INTO audit_logs (action, object_type, object_id, user_id, details) VALUES (?, ?, ?, ?)')
         .run('delete', 'listing', params.id, user.id, details);
     } catch (e) {
       // non-fatal

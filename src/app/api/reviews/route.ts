@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const reviews = db.prepare('SELECT * FROM reviews WHERE listing_id = ? ORDER BY created_at DESC').all(listingId);
+    const reviews = await db.prepare('SELECT * FROM reviews WHERE listing_id = ? ORDER BY created_at DESC').all(listingId);
     return NextResponse.json(reviews);
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -28,12 +28,12 @@ export async function POST(request: NextRequest) {
     const { listingId, rating, comment } = await request.json();
 
     // Get user name/email from users table when available
-    const u: any = db.prepare('SELECT name, email FROM users WHERE id = ?').get(user.id);
+    const u: any = await db.prepare('SELECT name, email FROM users WHERE id = ?').get(user.id);
     const reviewer_name = u?.name || user.email || '';
     const reviewer_email = u?.email || user.email || '';
 
     const stmt = db.prepare('INSERT INTO reviews (listing_id, rating, comment, user_id, reviewer_name, reviewer_email) VALUES (?, ?, ?, ?, ?, ?)');
-    const result = stmt.run(listingId, rating, comment, user.id, reviewer_name, reviewer_email);
+    const result = await stmt.run(listingId, rating, comment, user.id, reviewer_name, reviewer_email);
 
     return NextResponse.json({ message: 'Review added', id: result.lastInsertRowid });
   } catch (error) {

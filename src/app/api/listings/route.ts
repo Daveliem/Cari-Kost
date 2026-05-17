@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       INSERT INTO listings (title, description, price, location, latitude, longitude, room_type, amenities, images, contact, user_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
-    const result = stmt.run(title, description, price, location, latitude, longitude, room_type, amenities, imagePayload, contact, user.id);
+    const result = await stmt.run(title, description, price, location, latitude, longitude, room_type, amenities, imagePayload, contact, user.id);
 
     return NextResponse.json({ message: 'Listing created', id: result.lastInsertRowid });
   } catch (error) {
@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
   query += ' GROUP BY l.id';
 
   try {
-    const listings = db.prepare(query).all(...params);
+    const listings = await db.prepare(query).all(...params);
     const parsedListings = listings.map((listing: any) => ({
       ...listing,
       images: typeof listing.images === 'string' ? JSON.parse(listing.images || '[]') : listing.images || []

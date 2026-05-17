@@ -9,14 +9,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const profile: any = db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(user.id);
+    const profile: any = await db.prepare('SELECT id, name, email, role FROM users WHERE id = ?').get(user.id);
     if (!profile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const listingCount = Number((db.prepare('SELECT COUNT(*) AS count FROM listings WHERE user_id = ?').get(user.id) as { count: number } | undefined)?.count ?? 0);
-    const favoriteCount = Number((db.prepare('SELECT COUNT(*) AS count FROM favorites WHERE user_id = ?').get(user.id) as { count: number } | undefined)?.count ?? 0);
-    const reviewCount = Number((db.prepare('SELECT COUNT(*) AS count FROM reviews WHERE user_id = ?').get(user.id) as { count: number } | undefined)?.count ?? 0);
+    const listingCountRow = await db.prepare('SELECT COUNT(*) AS count FROM listings WHERE user_id = ?').get(user.id) as { count: number } | undefined;
+    const favoriteCountRow = await db.prepare('SELECT COUNT(*) AS count FROM favorites WHERE user_id = ?').get(user.id) as { count: number } | undefined;
+    const reviewCountRow = await db.prepare('SELECT COUNT(*) AS count FROM reviews WHERE user_id = ?').get(user.id) as { count: number } | undefined;
+
+    const listingCount = Number(listingCountRow?.count ?? 0);
+    const favoriteCount = Number(favoriteCountRow?.count ?? 0);
+    const reviewCount = Number(reviewCountRow?.count ?? 0);
 
     return NextResponse.json({
       ...profile,

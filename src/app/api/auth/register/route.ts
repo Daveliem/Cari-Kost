@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     const { email, password, name } = await request.json();
 
     // Check if user exists
-    const existingUser = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    const existingUser = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
     if (existingUser) {
       return NextResponse.json({ error: 'User already exists' }, { status: 400 });
     }
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Insert user
     const stmt = db.prepare('INSERT INTO users (email, password, name) VALUES (?, ?, ?)');
-    const result = stmt.run(email, hashedPassword, name);
+    const result = await stmt.run(email, hashedPassword, name);
 
     return NextResponse.json({ message: 'User registered', userId: result.lastInsertRowid });
   } catch (error) {

@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const rows = db.prepare('SELECT listing_id FROM favorites WHERE user_id = ?').all(user.id);
+    const rows = await db.prepare('SELECT listing_id FROM favorites WHERE user_id = ?').all(user.id);
     return NextResponse.json(rows.map((row: any) => row.listing_id));
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing listingId' }, { status: 400 });
     }
 
-    db.prepare('INSERT OR IGNORE INTO favorites (user_id, listing_id) VALUES (?, ?)').run(user.id, listingId);
+    await db.prepare('INSERT IGNORE INTO favorites (user_id, listing_id) VALUES (?, ?)').run(user.id, listingId);
     return NextResponse.json({ message: 'Favorit ditambahkan' });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -47,7 +47,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Missing listingId' }, { status: 400 });
     }
 
-    db.prepare('DELETE FROM favorites WHERE user_id = ? AND listing_id = ?').run(user.id, listingId);
+    await db.prepare('DELETE FROM favorites WHERE user_id = ? AND listing_id = ?').run(user.id, listingId);
     return NextResponse.json({ message: 'Favorit dihapus' });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

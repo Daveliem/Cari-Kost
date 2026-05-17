@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const { email, password } = await request.json();
 
     // Find user
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email) as {
+    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email) as {
       id: number;
       name: string;
       email: string;

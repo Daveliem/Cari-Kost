@@ -1,91 +1,156 @@
-import Database from 'better-sqlite3';
-import path from 'path';
+import mysql from 'mysql2/promise';
 
-const dbPath = path.join(process.cwd(), 'kost.db');
-const db = new Database(dbPath);
+const MYSQL_HOST = process.env.MYSQL_HOST || '127.0.0.1';
+const MYSQL_PORT = Number(process.env.MYSQL_PORT || '3306');
+const MYSQL_USER = process.env.MYSQL_USER || 'root';
+const MYSQL_PASSWORD = process.env.MYSQL_PASSWORD || '';
+const MYSQL_DATABASE = process.env.MYSQL_DATABASE || 'kost_search';
 
-// Create tables
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT DEFAULT 'landlord' -- landlord or user
-  );
+async function createDatabaseIfMissing() {
+  const connection = await mysql.createConnection({
+    host: MYSQL_HOST,
+    port: MYSQL_PORT,
+    user: MYSQL_USER,
+    password: MYSQL_PASSWORD,
+    multipleStatements: true,
+  });
 
-  CREATE TABLE IF NOT EXISTS listings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    price INTEGER NOT NULL,
-    location TEXT NOT NULL,
-    latitude REAL,
-    longitude REAL,
-    room_type TEXT, -- single, shared, etc.
-    amenities TEXT, -- comma separated
-    images TEXT, -- JSON array of image URLs
-    contact TEXT NOT NULL,
-    user_id INTEGER,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS reviews (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    listing_id INTEGER,
-    rating INTEGER NOT NULL,
-    comment TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (listing_id) REFERENCES listings(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS favorites (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    listing_id INTEGER NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (listing_id) REFERENCES listings(id),
-    UNIQUE(user_id, listing_id)
-  );
-
-  CREATE TABLE IF NOT EXISTS audit_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    action TEXT NOT NULL,
-    object_type TEXT NOT NULL,
-    object_id INTEGER,
-    user_id INTEGER,
-    details TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
-
-export default db;
-
-// Ensure reviews table has reviewer fields for existing databases
-try {
-  const info = db.prepare("PRAGMA table_info(reviews)").all();
-  const cols = info.map((c: any) => c.name);
-  if (!cols.includes('reviewer_name')) {
-    db.prepare('ALTER TABLE reviews ADD COLUMN reviewer_name TEXT').run();
-  }
-  if (!cols.includes('reviewer_email')) {
-    db.prepare('ALTER TABLE reviews ADD COLUMN reviewer_email TEXT').run();
-  }
-  if (!cols.includes('user_id')) {
-    // some older schemas may not have user_id on reviews
-    db.prepare('ALTER TABLE reviews ADD COLUMN user_id INTEGER').run();
-  }
-  try {
-    const listingInfo = db.prepare("PRAGMA table_info(listings)").all();
-    const listingCols = listingInfo.map((c: any) => c.name);
-    if (!listingCols.includes('images')) {
-      db.prepare('ALTER TABLE listings ADD COLUMN images TEXT').run();
-    }
-  } catch (e) {
-    console.error('DB migration check failed', e);
-  }
-} catch (e) {
-  // ignore migration errors
-  console.error('DB migration check failed', e);
+  await connection.query(`CREATE DATABASE IF NOT EXISTS \`${MYSQL_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`);
+  await connection.end();
 }
+
+async function createTables(pool: mysql.Pool) {
+  await pool.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      role VARCHAR(50) DEFAULT 'landlord',
+      PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+    CREATE TABLE IF NOT EXISTS listings (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      price INT NOT NULL,
+      location VARCHAR(255) NOT NULL,
+      latitude DOUBLE,
+      longitude DOUBLE,
+      room_type VARCHAR(100),
+      amenities TEXT,
+      images TEXT,
+      contact VARCHAR(255) NOT NULL,
+      user_id INT UNSIGNED,
+      PRIMARY KEY (id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+    CREATE TABLE IF NOT EXISTS reviews (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      listing_id INT UNSIGNED,
+      rating INT NOT NULL,
+      comment TEXT,
+      user_id INT UNSIGNED,
+      reviewer_name VARCHAR(255),
+      reviewer_email VARCHAR(255),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+    CREATE TABLE IF NOT EXISTS favorites (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      user_id INT UNSIGNED NOT NULL,
+      listing_id INT UNSIGNED NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uniq_user_listing (user_id, listing_id),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+      action VARCHAR(255) NOT NULL,
+      object_type VARCHAR(255) NOT NULL,
+      object_id INT,
+      user_id INT UNSIGNED,
+      details TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `);
+}
+
+async function ensureColumn(pool: mysql.Pool, table: string, column: string, alterSql: string) {
+  const [rows] = await pool.query(`SHOW COLUMNS FROM \`${table}\` LIKE ?`, [column]);
+  if (!Array.isArray(rows) || rows.length === 0) {
+    await pool.execute(alterSql);
+  }
+}
+
+const poolPromise = (async () => {
+  await createDatabaseIfMissing();
+
+  const pool = mysql.createPool({
+    host: MYSQL_HOST,
+    port: MYSQL_PORT,
+    user: MYSQL_USER,
+    password: MYSQL_PASSWORD,
+    database: MYSQL_DATABASE,
+    waitForConnections: true,
+    connectionLimit: 10,
+    charset: 'utf8mb4',
+    multipleStatements: true,
+  });
+
+  await createTables(pool);
+  await ensureColumn(pool, 'reviews', 'reviewer_name', 'ALTER TABLE reviews ADD COLUMN reviewer_name VARCHAR(255)');
+  await ensureColumn(pool, 'reviews', 'reviewer_email', 'ALTER TABLE reviews ADD COLUMN reviewer_email VARCHAR(255)');
+  await ensureColumn(pool, 'reviews', 'user_id', 'ALTER TABLE reviews ADD COLUMN user_id INT UNSIGNED');
+  await ensureColumn(pool, 'listings', 'images', 'ALTER TABLE listings ADD COLUMN images TEXT');
+
+  return pool;
+})();
+
+async function getPool() {
+  return poolPromise;
+}
+
+function prepare(sql: string) {
+  return {
+    async get(...params: any[]) {
+      const pool = await getPool();
+      const [rows] = await pool.execute(sql, params);
+      if (!Array.isArray(rows)) {
+        return undefined;
+      }
+      return (rows as any)[0];
+    },
+
+    async all(...params: any[]) {
+      const pool = await getPool();
+      const [rows] = await pool.execute(sql, params);
+      if (!Array.isArray(rows)) {
+        return [];
+      }
+      return rows as any[];
+    },
+
+    async run(...params: any[]) {
+      const pool = await getPool();
+      const [result] = await pool.execute(sql, params);
+      const info = result as mysql.ResultSetHeader;
+      return {
+        lastInsertRowid: info.insertId ?? 0,
+        changes: info.affectedRows ?? 0,
+      };
+    },
+  };
+}
+
+export default {
+  prepare,
+};
