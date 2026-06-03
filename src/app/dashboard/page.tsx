@@ -13,10 +13,17 @@ interface Listing {
   location: string;
 }
 
+interface UserInfo {
+  id: number;
+  role: string;
+  name: string;
+}
+
 export default function Dashboard() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadError, setUploadError] = useState('');
@@ -36,19 +43,26 @@ export default function Dashboard() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    setIsLoggedIn(!!token);
-    setReady(true);
     if (token) {
+      setIsLoggedIn(true);
+      // Decode JWT to get role
+      const decoded = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+      setUserRole(decoded.role);
       fetchListings(token);
     }
+    setReady(true);
   }, []);
 
   const fetchListings = async (token: string) => {
     const res = await fetch('/api/listings', {
       headers: { Authorization: `Bearer ${token}` }
     });
+    if (!res.ok) {
+      setListings([]);
+      return;
+    }
     const data = await res.json();
-    setListings(data);
+    setListings(Array.isArray(data) ? data : []);
   };
 
   const uploadImages = async (files: FileList | null) => {
@@ -81,6 +95,16 @@ export default function Dashboard() {
     } finally {
       setUploadingImages(false);
     }
+  };
+
+  const formatRupiah = (value: string) => {
+    if (!value) return '';
+    return Number(value).toLocaleString('id-ID');
+  };
+
+  const handlePriceChange = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    setFormData((prev: any) => ({ ...prev, price: digits }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -177,16 +201,37 @@ export default function Dashboard() {
       <div className="min-h-screen bg-slate-50 py-20">
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-lg">
           <h1 className="text-3xl font-bold text-slate-900">Dashboard Pemilik</h1>
-          <p className="mt-4 text-slate-600">Silakan masuk terlebih dahulu untuk melihat dan menambahkan listing kost.</p>
+          <p className="mt-4 text-slate-600">Silakan login terlebih dahulu untuk melihat dan menambahkan listing kost.</p>
           <div className="mt-8 flex justify-center gap-4">
-            <Link href="/login" className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400">
-              Masuk
+            <Link href="/login" className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400">
+              Login
             </Link>
             <Link href="/register" className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
               Daftar
             </Link>
           </div>
           <p className="mt-6 text-sm text-slate-500">Kembali ke halaman utama untuk mencari kost tanpa login.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user is not an owner or admin
+  if (userRole && userRole !== 'owner' && userRole !== 'landlord' && userRole !== 'admin') {
+    return (
+      <div className="min-h-screen bg-slate-50 py-20">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-lg">
+          <h1 className="text-3xl font-bold text-slate-900">Akses Terbatas</h1>
+          <p className="mt-4 text-slate-600">Anda tidak memiliki izin untuk membuat listing kost. Hanya pemilik/owner yang dapat membuat listing.</p>
+          <p className="mt-4 text-slate-600">Hubungi administrator untuk menjadi owner atau gunakan akun pemilik.</p>
+          <div className="mt-8 flex justify-center gap-4">
+            <Link href="/" className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400">
+              Kembali ke Pencarian
+            </Link>
+            <Link href="/profile" className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+              Profil Saya
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -209,17 +254,17 @@ export default function Dashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-            <button
+            <div className="mb-8">
+            	<button
               onClick={() => setShowForm(!showForm)}
-              className="bg-green-600 text-white px-4 py-2 rounded"
+              className="bg-green-600 text-white px-4 py-2 rounded btn-strong"
             >
               {showForm ? 'Batal' : 'Tambah Listing Baru'}
             </button>
         </div>
 
         {showForm && (
-          <div className="bg-white p-6 rounded-lg shadow mb-8">
+          <div className="bg-white p-6 rounded-lg shadow mb-8 card">
             <h2 className="text-xl font-semibold mb-4">{editingId ? 'Edit Listing' : 'Tambah Listing'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
@@ -236,14 +281,17 @@ export default function Dashboard() {
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 className="w-full border p-2 rounded"
               />
-              <input
-                type="number"
-                placeholder="Harga"
-                value={formData.price}
-                onChange={(e) => setFormData({...formData, price: e.target.value})}
-                className="w-full border p-2 rounded"
-                required
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">Rp</span>
+                <input
+                  type="text"
+                  placeholder="Rp 0"
+                  value={formData.price ? formatRupiah(formData.price) : ''}
+                  onChange={(e) => handlePriceChange(e.target.value)}
+                  className="w-full border p-2 rounded pl-14"
+                  required
+                />
+              </div>
               <input
                 type="text"
                 placeholder="Lokasi"
@@ -332,17 +380,38 @@ export default function Dashboard() {
                 {uploadingImages && <p className="text-sm text-slate-500">Mengunggah foto...</p>}
               </div>
 
+              {/* Preview thumbnails for uploaded / added images */}
+              {Array.isArray(formData.images) && formData.images.filter(Boolean).length > 0 && (
+                <div className="mt-3">
+                  <p className="mb-2 text-sm font-medium text-slate-700">Pratinjau Foto</p>
+                  <div className="flex flex-wrap gap-3">
+                    {formData.images.filter(Boolean).map((img: string, idx: number) => (
+                      <div key={idx} className="relative w-28 h-20 overflow-hidden rounded-md border">
+                        <img src={img} alt={`foto-${idx}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev: any) => ({ ...prev, images: prev.images.filter((_: string, i: number) => i !== idx) }))}
+                          className="absolute top-1 right-1 rounded-full bg-white/80 px-2 py-1 text-xs text-red-600"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <label className="block text-sm font-semibold text-slate-700">Foto / URL Gambar</label>
                 {formData.images.map((image, idx) => (
                   <div key={idx} className="flex gap-3 items-center">
                     <input
-                      type="url"
-                      placeholder="https://..."
+                      type="text"
+                      placeholder="https://... atau /uploads/relative-path.png"
                       value={image}
                       onChange={(e) => setFormData((prev: any) => ({
                         ...prev,
-                        images: prev.images.map((img: string, index: number) => index === idx ? e.target.value : img)
+                        images: prev.images.map((img: string, index: number) => index === idx ? e.target.value.trim() : img)
                       }))}
                       className="w-full border p-2 rounded"
                     />
@@ -367,6 +436,7 @@ export default function Dashboard() {
                 >
                   Tambah URL Foto
                 </button>
+                <p className="mt-2 text-xs text-slate-500">Boleh menggunakan URL lengkap (https://...) atau path relatif dari server (mis. /uploads/xxx.png).</p>
               </div>
 
               <input
@@ -378,16 +448,16 @@ export default function Dashboard() {
                 required
               />
               <div className="flex items-center gap-3">
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">{editingId ? 'Update' : 'Simpan'}</button>
+                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded btn-strong">{editingId ? 'Update' : 'Simpan'}</button>
                 {editingId && (
-                  <button type="button" onClick={() => { setEditingId(null); setShowForm(false); setFormData({ title: '', description: '', price: '', location: '', latitude: '', longitude: '', room_type: 'single', amenities: [], images: [''], contact: '' }); }} className="rounded border px-4 py-2 text-sm">Batal</button>
+                  <button type="button" onClick={() => { setEditingId(null); setShowForm(false); setFormData({ title: '', description: '', price: '', location: '', latitude: '', longitude: '', room_type: 'single', amenities: [], images: [''], contact: '' }); }} className="rounded border px-4 py-2 text-sm btn-strong btn-ghost">Batal</button>
                 )}
               </div>
             </form>
           </div>
         )}
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow card">
           <h2 className="text-xl font-semibold mb-4">Listing Saya</h2>
           <div className="space-y-4">
             {listings.map((listing: any) => (

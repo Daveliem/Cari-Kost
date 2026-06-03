@@ -20,17 +20,17 @@ async function createDatabaseIfMissing() {
 }
 
 async function createTables(pool: mysql.Pool) {
-  await pool.execute(`
-    CREATE TABLE IF NOT EXISTS users (
+  const stmts = [
+    `CREATE TABLE IF NOT EXISTS users (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
       email VARCHAR(255) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
       name VARCHAR(255) NOT NULL,
       role VARCHAR(50) DEFAULT 'landlord',
       PRIMARY KEY (id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
-    CREATE TABLE IF NOT EXISTS listings (
+    `CREATE TABLE IF NOT EXISTS listings (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
       title VARCHAR(255) NOT NULL,
       description TEXT,
@@ -45,9 +45,9 @@ async function createTables(pool: mysql.Pool) {
       user_id INT UNSIGNED,
       PRIMARY KEY (id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
-    CREATE TABLE IF NOT EXISTS reviews (
+    `CREATE TABLE IF NOT EXISTS reviews (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
       listing_id INT UNSIGNED,
       rating INT NOT NULL,
@@ -58,9 +58,9 @@ async function createTables(pool: mysql.Pool) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
       FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
-    CREATE TABLE IF NOT EXISTS favorites (
+    `CREATE TABLE IF NOT EXISTS favorites (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
       user_id INT UNSIGNED NOT NULL,
       listing_id INT UNSIGNED NOT NULL,
@@ -69,9 +69,9 @@ async function createTables(pool: mysql.Pool) {
       UNIQUE KEY uniq_user_listing (user_id, listing_id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
-    CREATE TABLE IF NOT EXISTS audit_logs (
+    `CREATE TABLE IF NOT EXISTS audit_logs (
       id INT UNSIGNED NOT NULL AUTO_INCREMENT,
       action VARCHAR(255) NOT NULL,
       object_type VARCHAR(255) NOT NULL,
@@ -80,8 +80,12 @@ async function createTables(pool: mysql.Pool) {
       details TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-  `);
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
+  ];
+
+  for (const s of stmts) {
+    await pool.execute(s);
+  }
 }
 
 async function ensureColumn(pool: mysql.Pool, table: string, column: string, alterSql: string) {

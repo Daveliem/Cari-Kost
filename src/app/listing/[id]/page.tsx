@@ -1,20 +1,11 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
 import { useParams } from 'next/navigation';
 
-const defaultIcon = L.icon({
-  iconUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-L.Marker.prototype.options.icon = defaultIcon;
+const ListingMap = dynamic(() => import('@/components/ListingMap'), { ssr: false });
 
 interface Listing {
   id: number;
@@ -66,8 +57,20 @@ export default function ListingDetail() {
 
   const fetchListing = async () => {
     const res = await fetch(`/api/listings/${id}`);
+    if (!res.ok) {
+      setListing(null);
+      return;
+    }
     const data = await res.json();
-    setListing(data);
+    const parsed = {
+      ...data,
+      images: typeof data.images === 'string' ? JSON.parse(data.images || '[]') : data.images || [],
+      average_rating: data.average_rating != null ? Number(data.average_rating) : 0,
+      review_count: data.review_count != null ? Number(data.review_count) : 0,
+      latitude: data.latitude != null ? Number(data.latitude) : null,
+      longitude: data.longitude != null ? Number(data.longitude) : null,
+    };
+    setListing(parsed);
   };
 
   const fetchReviews = async () => {
@@ -119,37 +122,27 @@ export default function ListingDetail() {
 
         {typeof listing.latitude === 'number' && typeof listing.longitude === 'number' ? (
           <div className="mb-8 overflow-hidden rounded-3xl shadow-sm">
-            <MapContainer
-              center={[listing.latitude, listing.longitude]}
-              zoom={15}
-              scrollWheelZoom={false}
-              className="h-96 w-full"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <Marker position={[listing.latitude, listing.longitude]}>
-                <Popup>
-                  {listing.title} <br /> {listing.location}
-                </Popup>
-              </Marker>
-            </MapContainer>
+            <ListingMap
+              latitude={listing.latitude}
+              longitude={listing.longitude}
+              title={listing.title}
+              location={listing.location}
+            />
           </div>
         ) : (
           <div className="mb-8 rounded-3xl bg-slate-50 p-6 text-slate-600 shadow-sm">
             Koordinat belum tersedia untuk lokasi ini.
           </div>
         )}
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="bg-white p-6 rounded-lg shadow mb-8 card">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold mb-2">{listing.title}</h1>
-              <p className="text-gray-600">{listing.location}</p>
+              <p className="text-slate-700">{listing.location}</p>
             </div>
             <div className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-sm">
               <p className="font-semibold text-slate-900">Rating rata-rata</p>
-              <p className="mt-1 text-lg font-semibold text-emerald-600">{listing.average_rating?.toFixed(1) ?? '0.0'} / 5</p>
+              <p className="mt-1 text-lg font-semibold text-emerald-600">{Number(listing.average_rating ?? 0).toFixed(1)} / 5</p>
               <p className="text-slate-500">{listing.review_count ?? 0} ulasan</p>
             </div>
           </div>
@@ -157,11 +150,11 @@ export default function ListingDetail() {
             <p><strong>Tipe:</strong> {listing.room_type}</p>
             <p><strong>Fasilitas:</strong> {listing.amenities}</p>
           </div>
-          <p className="mt-4 text-slate-600">{listing.description}</p>
-          <p className="mt-4 text-lg"><strong>Kontak:</strong> {listing.contact}</p>
+          <p className="mt-4 text-slate-700">{listing.description}</p>
+          <p className="mt-4 text-lg text-slate-900"><strong>Kontak:</strong> {listing.contact}</p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <div className="bg-white p-6 rounded-lg shadow mb-8 card">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Ulasan</h2>
             <div className="text-sm text-slate-500">{reviews.length} ulasan</div>

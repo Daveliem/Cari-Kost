@@ -8,6 +8,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Check if user has 'owner', 'landlord', or 'admin' role
+  if (user.role !== 'owner' && user.role !== 'landlord' && user.role !== 'admin') {
+    return NextResponse.json({ error: 'Only owners can create listings' }, { status: 403 });
+  }
+
   try {
     const { title, description, price, location, latitude, longitude, room_type, amenities, images, contact } = await request.json();
     const imagePayload = images ? JSON.stringify(images) : JSON.stringify([]);
@@ -20,6 +25,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: 'Listing created', id: result.lastInsertRowid });
   } catch (error) {
+    console.error('POST /api/listings error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -30,7 +36,6 @@ export async function GET(request: NextRequest) {
   const priceMin = searchParams.get('priceMin');
   const priceMax = searchParams.get('priceMax');
   const amenitiesParam = searchParams.get('amenities');
-  const amenitiesMode = (searchParams.get('amenitiesMode') || 'and').toLowerCase();
   const roomType = searchParams.get('roomType');
   const amenities = amenitiesParam ? amenitiesParam.split(',').map(s => s.trim()).filter(Boolean) : [];
 
@@ -44,8 +49,9 @@ export async function GET(request: NextRequest) {
   const params: any[] = [];
 
   if (location) {
-    query += ' AND l.location LIKE ?';
-    params.push(`%${location}%`);
+    // search both by location and title (nama kost)
+    query += ' AND (l.location LIKE ? OR l.title LIKE ?)';
+    params.push(`%${location}%`, `%${location}%`);
   }
   if (priceMin) {
     query += ' AND l.price >= ?';
@@ -56,15 +62,10 @@ export async function GET(request: NextRequest) {
     params.push(priceMax);
   }
   if (amenities.length > 0) {
-    if (amenitiesMode === 'or') {
-      query += ' AND (' + amenities.map(() => 'LOWER(l.amenities) LIKE ?').join(' OR ') + ')';
-      for (const am of amenities) params.push(`%${am.toLowerCase()}%`);
-    } else {
-      // require ALL selected amenities to be present (AND)
-      for (const am of amenities) {
-        query += ' AND LOWER(l.amenities) LIKE ?';
-        params.push(`%${am.toLowerCase()}%`);
-      }
+    // require ALL selected amenities to be present (AND)
+    for (const am of amenities) {
+      query += ' AND LOWER(l.amenities) LIKE ?';
+      params.push(`%${am.toLowerCase()}%`);
     }
   }
   if (roomType) {
@@ -78,10 +79,15 @@ export async function GET(request: NextRequest) {
     const listings = await db.prepare(query).all(...params);
     const parsedListings = listings.map((listing: any) => ({
       ...listing,
-      images: typeof listing.images === 'string' ? JSON.parse(listing.images || '[]') : listing.images || []
+      images: typeof listing.images === 'string' ? JSON.parse(listing.images || '[]') : listing.images || [],
+      average_rating: listing.average_rating != null ? Number(listing.average_rating) : 0,
+      review_count: listing.review_count != null ? Number(listing.review_count) : 0,
+      latitude: listing.latitude != null ? Number(listing.latitude) : null,
+      longitude: listing.longitude != null ? Number(listing.longitude) : null,
     }));
     return NextResponse.json(parsedListings);
   } catch (error) {
+    console.error('GET /api/listings error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

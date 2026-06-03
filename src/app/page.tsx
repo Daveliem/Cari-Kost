@@ -31,9 +31,9 @@ export default function Home() {
     roomType: '',
     amenities: [] as string[],
   });
-  const [amenitiesMode, setAmenitiesMode] = useState<'and' | 'or'>('and');
   const [favoriteOnly, setFavoriteOnly] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState<number[]>([]);
+  const amenityOptions = ['AC', 'WiFi', 'Kamar mandi dalam', 'Dapur', 'Parkir', 'Laundry', 'Listrik 24 jam', 'Air panas', 'TV', 'Ruang tamu'];
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [loadingNearby, setLoadingNearby] = useState(false);
@@ -62,11 +62,18 @@ export default function Home() {
     if (filters.priceMin) params.append('priceMin', filters.priceMin);
     if (filters.priceMax) params.append('priceMax', filters.priceMax);
     if (filters.amenities && filters.amenities.length > 0) params.append('amenities', filters.amenities.join(','));
-    params.append('amenitiesMode', amenitiesMode);
     if (filters.roomType) params.append('roomType', filters.roomType);
 
     const res = await fetch(`/api/listings?${params}`);
+    if (!res.ok) {
+      setListings([]);
+      return;
+    }
     const data = await res.json();
+    if (!Array.isArray(data)) {
+      setListings([]);
+      return;
+    }
     const parsed = (data as Listing[]).map((listing) => {
       const latitude = listing.latitude != null ? Number(listing.latitude) : undefined;
       const longitude = listing.longitude != null ? Number(listing.longitude) : undefined;
@@ -103,9 +110,13 @@ export default function Home() {
   };
 
   useEffect(() => {
-    fetchListings();
     fetchFavorites();
   }, []);
+
+  useEffect(() => {
+    fetchListings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filters]);
 
   const detectNearby = () => {
     if (!navigator.geolocation) {
@@ -214,7 +225,7 @@ export default function Home() {
               <p className="max-w-2xl text-base leading-8 text-slate-200/90 sm:text-lg">
                 Jelajahi pilihan kost dengan harga terbaik, fasilitas lengkap, dan lokasi strategis. Gunakan filter untuk mempersempit hasil dengan cepat.
               </p>
-              <form id="search" onSubmit={handleSearch} className="grid gap-3 sm:max-w-2xl sm:grid-cols-[1fr_auto]">
+              <form id="search" onSubmit={handleSearch} className="grid gap-3 sm:max-w-2xl">
                 <label className="sr-only" htmlFor="search-input">Cari lokasi kost</label>
                 <input
                   id="search-input"
@@ -224,30 +235,19 @@ export default function Home() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
-                <button type="submit" className="rounded-full bg-emerald-400 px-8 py-4 text-sm font-semibold text-slate-950 transition hover:bg-emerald-300">
-                  Cari Kost
-                </button>
+                <p className="mt-2 text-sm text-slate-200">Cari berdasarkan nama atau lokasi kost. Ketik untuk melihat hasil otomatis.</p>
               </form>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-                <button
-                  type="button"
-                  onClick={detectNearby}
-                  className="inline-flex items-center justify-center rounded-full bg-white/90 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white"
-                >
-                  {loadingNearby ? 'Mendeteksi lokasi...' : 'Temukan kost dekat saya'}
-                </button>
-                {userLocation && (
-                  <p className="text-sm text-slate-200">
-                    Menampilkan kost terdekat dalam radius 5 km dari lokasi Anda.
-                  </p>
-                )}
-              </div>
+              {userLocation && (
+                <p className="text-sm text-slate-200">
+                  Menampilkan kost terdekat dalam radius 5 km dari lokasi Anda.
+                </p>
+              )}
             </div>
           </div>
         </section>
 
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[2rem] bg-white p-6 shadow-sm shadow-slate-200">
+          <div className="rounded-[2rem] bg-white p-6 shadow-sm shadow-slate-200 card">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Lihat hasil di peta</h2>
@@ -257,8 +257,15 @@ export default function Home() {
               </div>
               <button
                 type="button"
-                onClick={() => setNearbyOnly(!nearbyOnly)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                onClick={() => {
+                  if (!nearbyOnly) {
+                    detectNearby();
+                  } else {
+                    setNearbyOnly(false);
+                    setUserLocation(null);
+                  }
+                }}
+                className={`inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${nearbyOnly ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'} btn-strong`}
               >
                 {nearbyOnly ? 'Tampilkan semua' : 'Hanya kost dekat saya'}
               </button>
@@ -267,7 +274,7 @@ export default function Home() {
               {mapListings.length > 0 ? (
                 <SearchMap listings={mapListings} userLocation={userLocation ?? undefined} center={mapCenter} />
               ) : (
-                <div className="flex h-56 items-center justify-center px-6 text-center text-sm text-slate-500">
+                <div className="flex h-56 items-center justify-center px-6 text-center text-sm text-slate-700">
                   Peta belum tersedia karena belum ada listing dengan data koordinat lengkap. Tambahkan listing dengan latitude/longitude agar dapat ditampilkan.
                 </div>
               )}
@@ -276,24 +283,23 @@ export default function Home() {
         </section>
 
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[2rem] bg-white p-6 shadow-sm shadow-slate-200">
+          <div className="rounded-[2rem] bg-white p-6 shadow-sm shadow-slate-200 card">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-slate-900">Refine pencarian</h2>
-                <p className="mt-2 text-sm text-slate-500">Atur harga, tipe kamar, dan fasilitas agar hasil muncul lebih akurat.</p>
+                <h2 className="text-xl font-semibold text-slate-900">Persempit pencarian</h2>
+                <p className="mt-2 text-sm text-slate-700">Atur harga, tipe kamar, dan fasilitas agar hasil muncul lebih akurat.</p>
               </div>
               <button
                 type="button"
                 onClick={() => {
                   setSearch('');
                   setFilters({ priceMin: '', priceMax: '', roomType: '', amenities: [] });
-                  setAmenitiesMode('and');
                   setFavoriteOnly(false);
                   fetchListings();
                 }}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 btn-strong btn-ghost"
               >
-                Reset filter
+                Atur ulang filter
               </button>
             </div>
 
@@ -301,7 +307,7 @@ export default function Home() {
               <div className="rounded-3xl border border-slate-200 p-5">
                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Rentang harga</h3>
                 <div className="grid gap-3">
-                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-600">Min</label>
+                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-700">Min</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -310,7 +316,7 @@ export default function Home() {
                     value={filters.priceMin ? Number(filters.priceMin).toLocaleString('id-ID') : ''}
                     onChange={(e) => setFilters({ ...filters, priceMin: e.target.value.replace(/\D/g, '') })}
                   />
-                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-600">Max</label>
+                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-700">Max</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -335,38 +341,54 @@ export default function Home() {
                 </select>
               </div>
 
+
               <div className="rounded-3xl border border-slate-200 p-5">
                 <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700">Fasilitas</h3>
-                <div className="mb-4 text-sm text-slate-600">Mode pencarian</div>
-                <div className="flex flex-wrap gap-3">
-                  <label className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                    <input type="radio" name="amenMode" checked={amenitiesMode === 'and'} onChange={() => setAmenitiesMode('and')} />
-                    Semua (AND)
-                  </label>
-                  <label className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-                    <input type="radio" name="amenMode" checked={amenitiesMode === 'or'} onChange={() => setAmenitiesMode('or')} />
-                    Salah satu (OR)
-                  </label>
-                </div>
-                <div className="mt-4 grid gap-2 text-sm">
-                  {['AC', 'WiFi', 'Kamar mandi dalam', 'Dapur', 'Parkir', 'Laundry', 'Listrik 24 jam', 'Air panas', 'TV', 'Ruang tamu'].map((a) => {
-                    const checked = filters.amenities.includes(a);
-                    return (
-                      <label key={a} className="inline-flex w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 transition hover:border-emerald-400/30">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            setFilters((prev) => ({
-                              ...prev,
-                              amenities: e.target.checked ? [...prev.amenities, a] : prev.amenities.filter((x) => x !== a),
-                            }));
-                          }}
-                        />
-                        <span>{a}</span>
-                      </label>
-                    );
-                  })}
+                <div className="space-y-4">
+                  <label className="block text-xs font-medium uppercase tracking-[0.2em] text-slate-700 mb-2">Pilih fasilitas</label>
+                  <div className="grid gap-2 max-h-60 overflow-y-auto pr-2">
+                    {amenityOptions.map((a) => {
+                      const checked = filters.amenities.includes(a);
+                      return (
+                        <label key={a} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) =>
+                              setFilters({
+                                ...filters,
+                                amenities: e.target.checked
+                                  ? [...filters.amenities, a]
+                                  : filters.amenities.filter((x) => x !== a),
+                              })
+                            }
+                          />
+                          {a}
+                        </label>
+                      );
+                    })}
+                  </div>
+                  {filters.amenities.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {filters.amenities.map((a) => (
+                        <span key={a} className="inline-flex items-center gap-2 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                          {a}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFilters({
+                                ...filters,
+                                amenities: filters.amenities.filter((x) => x !== a),
+                              })
+                            }
+                            className="cursor-pointer hover:text-emerald-900"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -375,7 +397,7 @@ export default function Home() {
                 <button
                   type="button"
                   onClick={() => setFavoriteOnly(!favoriteOnly)}
-                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition ${favoriteOnly ? 'bg-emerald-500 text-slate-950' : 'border border-slate-200 bg-slate-50 text-slate-700'}`}
+                  className={`w-full rounded-2xl px-4 py-3 text-sm font-semibold transition ${favoriteOnly ? 'bg-emerald-500 text-white' : 'border border-slate-200 bg-slate-50 text-slate-700'}`}
                 >
                   {favoriteOnly ? 'Hanya favorit' : 'Tampilkan favorit'}
                 </button>
@@ -388,11 +410,11 @@ export default function Home() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Hasil pencarian</h2>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-slate-700">
                 Menampilkan {displayListings.length} kost{favoriteOnly ? ' favorit' : ''}{nearbyOnly ? ' dalam radius 5 km' : ''} yang cocok dengan pilihanmu.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
               {filters.roomType && <span className="rounded-full bg-slate-100 px-3 py-2">Tipe: {filters.roomType}</span>}
               {filters.priceMin && <span className="rounded-full bg-slate-100 px-3 py-2">Min: Rp {Number(filters.priceMin).toLocaleString()}</span>}
               {filters.priceMax && <span className="rounded-full bg-slate-100 px-3 py-2">Max: Rp {Number(filters.priceMax).toLocaleString()}</span>}
@@ -403,14 +425,14 @@ export default function Home() {
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {displayListings.length === 0 ? (
-              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-600">
+              <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-700">
                 {favoriteOnly ? 'Tidak ada kost favorit. Tandai beberapa item terlebih dahulu.' : 'Tidak ada listing yang cocok.'}
               </div>
             ) : (
               displayListings.map((listing) => {
                 const isFavorite = favoriteIds.includes(listing.id);
                 return (
-                  <div key={listing.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm shadow-slate-200 transition hover:-translate-y-1 hover:shadow-md">
+                  <div key={listing.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm shadow-slate-200 transition hover:-translate-y-1 hover:shadow-md border border-black">
                     <div className="relative h-56 bg-slate-200">
                       <div
                         className={`absolute inset-0 bg-cover bg-center ${listing.images && listing.images.length > 0 ? '' : 'bg-slate-200'}`}
@@ -424,7 +446,7 @@ export default function Home() {
                       <div className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="text-xl font-semibold text-slate-900">{listing.title}</h3>
-                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-700">
                             <span>{listing.location}</span>
                             {listing.distanceKm !== undefined && (
                               <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
@@ -442,19 +464,22 @@ export default function Home() {
                           {isFavorite ? '★' : '☆'}
                         </button>
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-slate-600">
+                      <div className="flex items-center gap-3 text-sm text-slate-700">
                         <span className="flex items-center gap-1">
                           {renderStars(listing.average_rating ?? 0)}
                         </span>
                         <span>({listing.review_count ?? 0} ulasan)</span>
                       </div>
-                      <p className="text-sm leading-6 text-slate-600 line-clamp-2">{listing.description ?? 'Deskripsi singkat kost.'}</p>
+                      <p className="text-sm leading-6 text-slate-700 line-clamp-2">{listing.description ?? 'Deskripsi singkat kost.'}</p>
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-xl font-semibold text-emerald-600">Rp {listing.price.toLocaleString()}</p>
-                          <p className="text-xs uppercase tracking-[0.2em] text-slate-600">Per bulan</p>
+                          <p className="text-xs uppercase tracking-[0.2em] text-slate-700">Per bulan</p>
                         </div>
-                        <Link href={`/listing/${listing.id}`} className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                        <Link
+                          href={`/listing/${listing.id}`}
+                          className="rounded-full bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                        >
                           Lihat detail
                         </Link>
                       </div>
@@ -467,19 +492,20 @@ export default function Home() {
         </section>
 
         <section id="about" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-white p-10 shadow-sm shadow-slate-200">
+          <div className="rounded-3xl bg-white p-10 shadow-sm shadow-slate-200 border border-black">
             <h2 className="text-2xl font-bold text-slate-900">Tentang Kami</h2>
-            <p className="mt-4 text-slate-600">
+            <p className="mt-4 text-slate-700">
               Website ini bertujuan untuk kalian yang ingin menemukan kost yang nyaman, terjangkau, dan dekat dengan lokasi favorit kalian.
             </p>
           </div>
         </section>
 
         <section id="help" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <span id="contact" className="sr-only">Kontak</span>
           <div className="grid gap-6 rounded-3xl bg-white p-10 shadow-sm shadow-slate-200 md:grid-cols-3">
             <div>
               <h3 className="text-lg font-semibold text-slate-900">Bantuan</h3>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
+              <ul className="mt-4 space-y-2 text-sm text-slate-700">
                 <li>Cari penggunaan</li>
                 <li>Kebijakan privasi</li>
                 <li>Syarat & ketentuan</li>
@@ -488,12 +514,12 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-slate-900">Kontak</h3>
-              <p className="mt-4 text-sm text-slate-600">unika@gmail.com</p>
-              <p className="text-sm text-slate-600">0812-3456-7890</p>
+              <p className="mt-4 text-sm text-slate-700">unika@gmail.com</p>
+              <p className="text-sm text-slate-700">0812-3456-7890</p>
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">Favorite</h3>
-              <p className="mt-4 text-sm text-slate-600">Tandai kost favorit agar mudah dicari kembali.</p>
+              <h3 className="text-lg font-semibold text-slate-900">Favorit</h3>
+              <p className="mt-4 text-sm text-slate-700">Tandai kost favorit agar mudah dicari kembali.</p>
             </div>
           </div>
         </section>

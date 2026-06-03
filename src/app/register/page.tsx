@@ -59,7 +59,7 @@ export default function RegisterPage() {
               value={name}
               onChange={(event) => setName(event.target.value)}
               required
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="mt-2 w-full rounded-xl border border-black bg-white px-4 py-3 text-black placeholder:text-slate-400 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </label>
 
@@ -70,7 +70,7 @@ export default function RegisterPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="mt-2 w-full rounded-xl border border-black bg-white px-4 py-3 text-black placeholder:text-slate-400 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </label>
 
@@ -82,7 +82,7 @@ export default function RegisterPage() {
               onChange={(event) => setPassword(event.target.value)}
               required
               minLength={6}
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="mt-2 w-full rounded-xl border border-black bg-white px-4 py-3 text-black placeholder:text-slate-400 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </label>
 
@@ -92,7 +92,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {loading ? 'Memproses...' : 'Daftar'}
           </button>
@@ -101,7 +101,7 @@ export default function RegisterPage() {
         <p className="mt-6 text-center text-sm text-slate-600">
           Sudah punya akun?{' '}
           <Link href="/login" className="font-semibold text-emerald-600 hover:text-emerald-500">
-            Masuk di sini
+            Login di sini
           </Link>
         </p>
       </div>

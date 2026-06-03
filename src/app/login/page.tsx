@@ -25,7 +25,7 @@ export default function LoginPage() {
 
       const result = await response.json();
       if (!response.ok) {
-        setError(result.error || 'Gagal masuk, cek kembali data Anda.');
+        setError(result.error || 'Gagal login, cek kembali data Anda.');
         setLoading(false);
         return;
       }
@@ -43,8 +43,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="mx-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-2xl font-bold text-slate-900">Masuk ke CariKost</h1>
-        <p className="mb-6 text-sm text-slate-600">Gunakan email dan password untuk masuk ke akun Anda.</p>
+        <h1 className="mb-2 text-2xl font-bold text-slate-900">Login ke CariKost</h1>
+        <p className="mb-6 text-sm text-slate-600">Gunakan email dan password untuk login ke akun Anda.</p>
 
         <form className="space-y-5" onSubmit={handleSubmit}>
           <label className="block">
@@ -54,7 +54,7 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="mt-2 w-full rounded-xl border border-black bg-white px-4 py-3 text-black placeholder:text-slate-400 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </label>
 
@@ -65,7 +65,7 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              className="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="mt-2 w-full rounded-xl border border-black bg-white px-4 py-3 text-black placeholder:text-slate-400 outline-none transition focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </label>
 
@@ -74,9 +74,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {loading ? 'Memproses...' : 'Masuk'}
+            {loading ? 'Memproses...' : 'Login'}
           </button>
         </form>
 

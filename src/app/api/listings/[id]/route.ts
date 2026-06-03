@@ -20,10 +20,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     }
     const parsed = {
       ...listing,
-      images: typeof listing.images === 'string' ? JSON.parse(listing.images || '[]') : listing.images || []
+      images: typeof listing.images === 'string' ? JSON.parse(listing.images || '[]') : listing.images || [],
+      average_rating: listing.average_rating != null ? Number(listing.average_rating) : 0,
+      review_count: listing.review_count != null ? Number(listing.review_count) : 0,
+      latitude: listing.latitude != null ? Number(listing.latitude) : null,
+      longitude: listing.longitude != null ? Number(listing.longitude) : null,
     };
     return NextResponse.json(parsed);
   } catch (error) {
+    console.error('GET /api/listings/[id] error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

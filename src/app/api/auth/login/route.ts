@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Generate JWT
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
-    return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email } });
+    return NextResponse.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
