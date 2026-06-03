@@ -6,7 +6,7 @@ import Link from 'next/link';
 
 interface User {
   id: number;
-  name: string;
+  name: string;a
   email: string;
   role: string;
 }
