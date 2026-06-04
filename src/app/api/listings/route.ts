@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   const params: any[] = [];
 
   if (location) {
-    // search both by location and title (nama kost)
+    // search both by location and title (nama kos)
     query += ' AND (l.location LIKE ? OR l.title LIKE ?)';
     params.push(`%${location}%`, `%${location}%`);
   }

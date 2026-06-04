@@ -43,7 +43,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="mx-auto w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-2xl font-bold text-slate-900">Login ke CariKost</h1>
+        <h1 className="mb-2 text-2xl font-bold text-slate-900">Login ke CariKos</h1>
         <p className="mb-6 text-sm text-slate-600">Gunakan email dan password untuk login ke akun Anda.</p>
 
         <form className="space-y-5" onSubmit={handleSubmit}>

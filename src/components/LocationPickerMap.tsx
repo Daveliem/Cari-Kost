@@ -41,7 +41,7 @@ export default function LocationPickerMap({ latitude, longitude, onChange }: Loc
         <LocationSelector onChange={onChange} />
         {latitude != null && longitude != null && (
           <Marker position={[latitude, longitude]}>
-            <Popup>Lokasi kost dipilih di sini</Popup>
+            <Popup>Lokasi kos dipilih di sini</Popup>
           </Marker>
         )}
       </MapContainer>

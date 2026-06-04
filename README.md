@@ -1,11 +1,11 @@
-# Pencarian Kost
+# Pencarian Kos
 
-Website pencarian kost untuk kota-kota di Indonesia. Platform web untuk pemilik kost menambah listing dan pencari kost mencari tempat tinggal.
+Website pencarian kos untuk kota-kota di Indonesia. Platform web untuk pemilik kos menambah listing dan pencari kos mencari tempat tinggal.
 
 ## Fitur
 
-- Pencarian kost dengan filter lokasi, harga, tipe kamar
-- Dashboard untuk pemilik kost menambah listing
+- Pencarian kos dengan filter lokasi, harga, tipe kamar
+- Dashboard untuk pemilik kos menambah listing
 - Sistem ulasan anonim
 - Autentikasi dasar untuk pemilik
 

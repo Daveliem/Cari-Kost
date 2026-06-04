@@ -220,26 +220,26 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.18),_transparent_30%)] opacity-80" />
           <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
             <div className="space-y-7 lg:max-w-3xl">
-              <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/90">Cari Kost & Apartemen</p>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Temukan kost nyaman dekat kampus, kantor, dan tempat favoritmu.</h1>
+              <p className="text-sm uppercase tracking-[0.3em] text-emerald-200/90">Cari Kos & Apartemen</p>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Temukan kos nyaman dekat kampus, kantor, dan tempat favoritmu.</h1>
               <p className="max-w-2xl text-base leading-8 text-slate-200/90 sm:text-lg">
-                Jelajahi pilihan kost dengan harga terbaik, fasilitas lengkap, dan lokasi strategis. Gunakan filter untuk mempersempit hasil dengan cepat.
+                Jelajahi pilihan kos dengan harga terbaik, fasilitas lengkap, dan lokasi strategis. Gunakan filter untuk mempersempit hasil dengan cepat.
               </p>
               <form id="search" onSubmit={handleSearch} className="grid gap-3 sm:max-w-2xl">
-                <label className="sr-only" htmlFor="search-input">Cari lokasi kost</label>
+                <label className="sr-only" htmlFor="search-input">Cari lokasi kos</label>
                 <input
                   id="search-input"
                   type="text"
-                  placeholder="Masukkan lokasi, nama kost, atau fasilitas..."
+                  placeholder="Masukkan lokasi, nama kos, atau fasilitas..."
                   className="min-w-0 rounded-full border border-white/20 bg-white/10 px-5 py-4 text-slate-100 placeholder-slate-300 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)] outline-none transition duration-200 focus:border-emerald-300 focus:bg-white/20 focus:ring-2 focus:ring-emerald-300/30"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
-                <p className="mt-2 text-sm text-slate-200">Cari berdasarkan nama atau lokasi kost. Ketik untuk melihat hasil otomatis.</p>
+                <p className="mt-2 text-sm text-slate-200">Cari berdasarkan nama atau lokasi kos. Ketik untuk melihat hasil otomatis.</p>
               </form>
               {userLocation && (
                 <p className="text-sm text-slate-200">
-                  Menampilkan kost terdekat dalam radius 5 km dari lokasi Anda.
+                  Menampilkan kos terdekat dalam radius 5 km dari lokasi Anda.
                 </p>
               )}
             </div>
@@ -252,7 +252,7 @@ export default function Home() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Lihat hasil di peta</h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  Sorot lokasi kost pada peta untuk melihat pilihan yang paling dekat dengan Anda.
+                  Sorot lokasi kos pada peta untuk melihat pilihan yang paling dekat dengan Anda.
                 </p>
               </div>
               <button
@@ -267,7 +267,7 @@ export default function Home() {
                 }}
                 className={`inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${nearbyOnly ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-emerald-500 text-white hover:bg-emerald-600'} btn-strong`}
               >
-                {nearbyOnly ? 'Tampilkan semua' : 'Hanya kost dekat saya'}
+                {nearbyOnly ? 'Tampilkan semua' : 'Hanya kos dekat saya'}
               </button>
             </div>
             <div className="mt-6 overflow-hidden rounded-[2rem] border border-slate-200 bg-slate-100">
@@ -411,7 +411,7 @@ export default function Home() {
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Hasil pencarian</h2>
               <p className="mt-2 text-sm text-slate-700">
-                Menampilkan {displayListings.length} kost{favoriteOnly ? ' favorit' : ''}{nearbyOnly ? ' dalam radius 5 km' : ''} yang cocok dengan pilihanmu.
+                Menampilkan {displayListings.length} kos{favoriteOnly ? ' favorit' : ''}{nearbyOnly ? ' dalam radius 5 km' : ''} yang cocok dengan pilihanmu.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-700">
@@ -426,7 +426,7 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {displayListings.length === 0 ? (
               <div className="rounded-3xl border border-slate-200 bg-white p-10 text-center text-slate-700">
-                {favoriteOnly ? 'Tidak ada kost favorit. Tandai beberapa item terlebih dahulu.' : 'Tidak ada listing yang cocok.'}
+                {favoriteOnly ? 'Tidak ada kos favorit. Tandai beberapa item terlebih dahulu.' : 'Tidak ada listing yang cocok.'}
               </div>
             ) : (
               displayListings.map((listing) => {
@@ -470,7 +470,7 @@ export default function Home() {
                         </span>
                         <span>({listing.review_count ?? 0} ulasan)</span>
                       </div>
-                      <p className="text-sm leading-6 text-slate-700 line-clamp-2">{listing.description ?? 'Deskripsi singkat kost.'}</p>
+                      <p className="text-sm leading-6 text-slate-700 line-clamp-2">{listing.description ?? 'Deskripsi singkat kos.'}</p>
                       <div className="flex items-center justify-between gap-4">
                         <div>
                           <p className="text-xl font-semibold text-emerald-600">Rp {listing.price.toLocaleString()}</p>
@@ -495,7 +495,7 @@ export default function Home() {
           <div className="rounded-3xl bg-white p-10 shadow-sm shadow-slate-200 border border-black">
             <h2 className="text-2xl font-bold text-slate-900">Tentang Kami</h2>
             <p className="mt-4 text-slate-700">
-              Website ini bertujuan untuk kalian yang ingin menemukan kost yang nyaman, terjangkau, dan dekat dengan lokasi favorit kalian.
+              Website ini bertujuan untuk kalian yang ingin menemukan kos yang nyaman, terjangkau, dan dekat dengan lokasi favorit kalian.
             </p>
           </div>
         </section>
@@ -519,7 +519,7 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-slate-900">Favorit</h3>
-              <p className="mt-4 text-sm text-slate-700">Tandai kost favorit agar mudah dicari kembali.</p>
+              <p className="mt-4 text-sm text-slate-700">Tandai kos favorit agar mudah dicari kembali.</p>
             </div>
           </div>
         </section>

@@ -201,7 +201,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-slate-50 py-20">
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-lg">
           <h1 className="text-3xl font-bold text-slate-900">Dashboard Pemilik</h1>
-          <p className="mt-4 text-slate-600">Silakan login terlebih dahulu untuk melihat dan menambahkan listing kost.</p>
+          <p className="mt-4 text-slate-600">Silakan login terlebih dahulu untuk melihat dan menambahkan listing kos.</p>
           <div className="mt-8 flex justify-center gap-4">
             <Link href="/login" className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400">
               Login
@@ -210,7 +210,7 @@ export default function Dashboard() {
               Daftar
             </Link>
           </div>
-          <p className="mt-6 text-sm text-slate-500">Kembali ke halaman utama untuk mencari kost tanpa login.</p>
+          <p className="mt-6 text-sm text-slate-500">Kembali ke halaman utama untuk mencari kos tanpa login.</p>
         </div>
       </div>
     );
@@ -222,7 +222,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-slate-50 py-20">
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-lg">
           <h1 className="text-3xl font-bold text-slate-900">Akses Terbatas</h1>
-          <p className="mt-4 text-slate-600">Anda tidak memiliki izin untuk membuat listing kost. Hanya pemilik/owner yang dapat membuat listing.</p>
+          <p className="mt-4 text-slate-600">Anda tidak memiliki izin untuk membuat listing kos. Hanya pemilik/owner yang dapat membuat listing.</p>
           <p className="mt-4 text-slate-600">Hubungi administrator untuk menjadi owner atau gunakan akun pemilik.</p>
           <div className="mt-8 flex justify-center gap-4">
             <Link href="/" className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400">

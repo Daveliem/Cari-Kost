@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CariKost - Temukan Kost Nyaman",
-  description: "Website pencarian kost untuk menemukan kost sesuai kebutuhanmu.",
+  title: "CariKos - Temukan Kos Nyaman",
+  description: "Website pencarian kos untuk menemukan kos sesuai kebutuhanmu.",
 };
 
 export default function RootLayout({

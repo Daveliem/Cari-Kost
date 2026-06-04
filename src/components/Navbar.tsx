@@ -35,7 +35,7 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-4">
           <Link href="/" className="text-xl font-semibold tracking-tight text-white">
-            CariKost
+            CariKos
           </Link>
           <div className="flex items-center gap-3 text-sm text-white/80 sm:hidden">
             <span className="rounded-full border border-slate-500 px-3 py-1">{userName ? `Halo, ${userName}` : 'Akses cepat'}</span>
@@ -44,7 +44,7 @@ export default function Navbar() {
 
         <nav className="flex flex-wrap items-center gap-3 text-sm text-white/80">
           <Link href="/#search" className="hover:text-emerald-300">
-            Cari Kost
+            Cari Kos
           </Link>
           <Link href="/#about" className="hover:text-emerald-300">
             Tentang
