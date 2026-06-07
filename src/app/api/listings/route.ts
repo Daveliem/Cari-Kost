@@ -41,12 +41,17 @@ export async function GET(request: NextRequest) {
 
   let query = `
     SELECT l.*,
+      u.name AS owner_name,
+      u.email AS owner_email,
       COALESCE(ROUND(AVG(r.rating), 1), 0) AS average_rating,
       COUNT(r.id) AS review_count
     FROM listings AS l
-    LEFT JOIN reviews AS r ON r.listing_id = l.id
+    LEFT JOIN reviews AS r ON r.listing_id = l.id AND r.deleted_at IS NULL
+    LEFT JOIN users AS u ON l.user_id = u.id
     WHERE 1=1`;
   const params: any[] = [];
+
+  const includeDeleted = searchParams.get('includeDeleted') === '1';
 
   if (location) {
     // search both by location and title (nama kos)
@@ -73,12 +78,15 @@ export async function GET(request: NextRequest) {
     params.push(roomType);
   }
 
+  if (!includeDeleted) query += ' AND l.deleted_at IS NULL';
   query += ' GROUP BY l.id';
 
   try {
     const listings = await db.prepare(query).all(...params);
     const parsedListings = listings.map((listing: any) => ({
       ...listing,
+      owner_name: listing.owner_name || listing.name || null,
+      owner_email: listing.owner_email || listing.email || null,
       images: typeof listing.images === 'string' ? JSON.parse(listing.images || '[]') : listing.images || [],
       average_rating: listing.average_rating != null ? Number(listing.average_rating) : 0,
       review_count: listing.review_count != null ? Number(listing.review_count) : 0,

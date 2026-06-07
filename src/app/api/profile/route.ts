@@ -14,9 +14,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    const listingCountRow = await db.prepare('SELECT COUNT(*) AS count FROM listings WHERE user_id = ?').get(user.id) as { count: number } | undefined;
+    const listingCountRow = await db.prepare('SELECT COUNT(*) AS count FROM listings WHERE user_id = ? AND deleted_at IS NULL').get(user.id) as { count: number } | undefined;
     const favoriteCountRow = await db.prepare('SELECT COUNT(*) AS count FROM favorites WHERE user_id = ?').get(user.id) as { count: number } | undefined;
-    const reviewCountRow = await db.prepare('SELECT COUNT(*) AS count FROM reviews WHERE user_id = ?').get(user.id) as { count: number } | undefined;
+    const reviewCountRow = await db.prepare('SELECT COUNT(*) AS count FROM reviews WHERE user_id = ? AND deleted_at IS NULL').get(user.id) as { count: number } | undefined;
 
     const listingCount = Number(listingCountRow?.count ?? 0);
     const favoriteCount = Number(favoriteCountRow?.count ?? 0);

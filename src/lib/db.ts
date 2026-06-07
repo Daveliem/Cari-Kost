@@ -27,6 +27,7 @@ async function createTables(pool: mysql.Pool) {
       password VARCHAR(255) NOT NULL,
       name VARCHAR(255) NOT NULL,
       role VARCHAR(50) DEFAULT 'landlord',
+      deleted_at DATETIME DEFAULT NULL,
       PRIMARY KEY (id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
 
@@ -43,6 +44,7 @@ async function createTables(pool: mysql.Pool) {
       images TEXT,
       contact VARCHAR(255) NOT NULL,
       user_id INT UNSIGNED,
+      deleted_at DATETIME DEFAULT NULL,
       PRIMARY KEY (id),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
@@ -56,6 +58,7 @@ async function createTables(pool: mysql.Pool) {
       reviewer_name VARCHAR(255),
       reviewer_email VARCHAR(255),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      deleted_at DATETIME DEFAULT NULL,
       PRIMARY KEY (id),
       FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`,
@@ -115,6 +118,9 @@ const poolPromise = (async () => {
   await ensureColumn(pool, 'reviews', 'reviewer_email', 'ALTER TABLE reviews ADD COLUMN reviewer_email VARCHAR(255)');
   await ensureColumn(pool, 'reviews', 'user_id', 'ALTER TABLE reviews ADD COLUMN user_id INT UNSIGNED');
   await ensureColumn(pool, 'listings', 'images', 'ALTER TABLE listings ADD COLUMN images TEXT');
+  await ensureColumn(pool, 'users', 'deleted_at', "ALTER TABLE users ADD COLUMN deleted_at DATETIME DEFAULT NULL");
+  await ensureColumn(pool, 'listings', 'deleted_at', "ALTER TABLE listings ADD COLUMN deleted_at DATETIME DEFAULT NULL");
+  await ensureColumn(pool, 'reviews', 'deleted_at', "ALTER TABLE reviews ADD COLUMN deleted_at DATETIME DEFAULT NULL");
 
   return pool;
 })();
