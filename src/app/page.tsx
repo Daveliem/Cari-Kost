@@ -37,6 +37,7 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [loadingNearby, setLoadingNearby] = useState(false);
+  const [expandListings, setExpandListings] = useState(false);
   const router = useRouter();
 
   const hasLocation = Boolean(
@@ -429,7 +430,7 @@ export default function Home() {
                 {favoriteOnly ? 'Tidak ada kos favorit. Tandai beberapa item terlebih dahulu.' : 'Tidak ada listing yang cocok.'}
               </div>
             ) : (
-              displayListings.map((listing) => {
+              displayListings.slice(0, expandListings ? displayListings.length : 3).map((listing) => {
                 const isFavorite = favoriteIds.includes(listing.id);
                 return (
                   <div key={listing.id} className="overflow-hidden rounded-[2rem] bg-white shadow-sm shadow-slate-200 transition hover:-translate-y-1 hover:shadow-md border border-black">
@@ -489,6 +490,25 @@ export default function Home() {
               })
             )}
           </div>
+          {displayListings.length > 3 && (
+            <div className="mt-8 flex justify-center">
+              <button
+                type="button"
+                onClick={() => setExpandListings(!expandListings)}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600"
+              >
+                {expandListings ? (
+                  <>
+                    Sembunyikan <span className="text-lg">▲</span>
+                  </>
+                ) : (
+                  <>
+                    Tampilkan lebih banyak <span className="text-lg">▼</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </section>
 
         <section id="about" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
