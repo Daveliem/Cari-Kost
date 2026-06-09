@@ -282,7 +282,7 @@ export default function Home() {
                   Sorot lokasi kos pada peta untuk melihat pilihan yang paling dekat dengan Anda.
                 </p>
               </div>
-              <button
+              <button hidden
                 type="button"
                 onClick={() => {
                   if (!nearbyOnly) {
