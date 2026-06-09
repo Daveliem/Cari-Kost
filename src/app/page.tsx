@@ -38,6 +38,8 @@ export default function Home() {
   const [nearbyOnly, setNearbyOnly] = useState(false);
   const [loadingNearby, setLoadingNearby] = useState(false);
   const [expandListings, setExpandListings] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userName, setUserName] = useState<string | null>(null);
   const router = useRouter();
 
   const hasLocation = Boolean(
@@ -111,6 +113,22 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Check for token on mount
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    if (token && user) {
+      try {
+        const userData = JSON.parse(user);
+        setIsLoggedIn(true);
+        setUserName(userData.name);
+      } catch {
+        setIsLoggedIn(false);
+        setUserName(null);
+      }
+    } else {
+      setIsLoggedIn(false);
+      setUserName(null);
+    }
     fetchFavorites();
   }, []);
 
@@ -212,6 +230,14 @@ export default function Home() {
         ★
       </span>
     ));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setIsLoggedIn(false);
+    setUserName(null);
+    setFavoriteIds([]);
   };
 
   return (

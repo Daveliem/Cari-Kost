@@ -9,7 +9,7 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
+  const updateUserName = () => {
     const userString = localStorage.getItem('user');
     if (userString) {
       try {
@@ -18,14 +18,41 @@ export default function Navbar() {
       } catch {
         setUserName(null);
       }
+    } else {
+      setUserName(null);
     }
+  };
+
+  useEffect(() => {
+    updateUserName();
     setMounted(true);
+
+    // Listen for storage changes from other tabs
+    window.addEventListener('storage', updateUserName);
+    
+    // Listen for visibility changes (when user returns to tab)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        updateUserName();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Listen for custom event when user logs in/out
+    window.addEventListener('userStateChange', updateUserName);
+
+    return () => {
+      window.removeEventListener('storage', updateUserName);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('userStateChange', updateUserName);
+    };
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUserName(null);
+    window.dispatchEvent(new Event('userStateChange'));
     router.push('/');
     setTimeout(() => { window.location.href = '/'; }, 50);
   };

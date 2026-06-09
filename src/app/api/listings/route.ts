@@ -39,6 +39,9 @@ export async function GET(request: NextRequest) {
   const roomType = searchParams.get('roomType');
   const amenities = amenitiesParam ? amenitiesParam.split(',').map(s => s.trim()).filter(Boolean) : [];
 
+  // Check if user is authenticated (viewing their own dashboard)
+  const user = verifyToken(request);
+
   let query = `
     SELECT l.*,
       u.name AS owner_name,
@@ -52,6 +55,12 @@ export async function GET(request: NextRequest) {
   const params: any[] = [];
 
   const includeDeleted = searchParams.get('includeDeleted') === '1';
+
+  // If authenticated user, only show their listings
+  if (user) {
+    query += ' AND l.user_id = ?';
+    params.push(user.id);
+  }
 
   if (location) {
     // search both by location and title (nama kos)

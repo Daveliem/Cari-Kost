@@ -32,6 +32,10 @@ export default function LoginPage() {
 
       localStorage.setItem('token', result.token);
       localStorage.setItem('user', JSON.stringify(result.user));
+      
+      // Dispatch custom event to notify Navbar of login
+      window.dispatchEvent(new Event('userStateChange'));
+      
       router.push('/dashboard');
     } catch (err) {
       setError('Terjadi kesalahan, silakan coba lagi.');
