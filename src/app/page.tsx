@@ -279,10 +279,10 @@ export default function Home() {
               <div>
                 <h2 className="text-xl font-semibold text-slate-900">Lihat hasil di peta</h2>
                 <p className="mt-2 text-sm text-slate-500">
-                  Sorot lokasi kos pada peta untuk melihat pilihan yang paling dekat dengan Anda.
+                  Sorot2 lokasi kos pada peta untuk melihat pilihan yang paling dekat dengan Anda.
                 </p>
               </div>
-              <button hidden
+              <button
                 type="button"
                 onClick={() => {
                   if (!nearbyOnly) {
