@@ -257,7 +257,7 @@ export default function Dashboard() {
             <div className="mb-8">
             	<button 
               onClick={() => setShowForm(!showForm)}
-              className="bg-white-600 text-white px-4 py-2 rounded btn-strong"
+              className="bg-green-600 text-white px-4 py-2 rounded btn-strong"
             >
               {showForm ? 'Batal' : 'Tambah Listing Baru'}
             </button>
