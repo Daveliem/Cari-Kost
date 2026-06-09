@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing listingId' }, { status: 400 });
     }
 
-    await db.prepare('INSERT IGNORE INTO favorites (user_id, listing_id) VALUES (?, ?)').run(user.id, listingId);
+    await db.prepare('INSERT INTO favorites (user_id, listing_id) VALUES (?, ?) ON CONFLICT DO NOTHING').run(user.id, listingId);
     return NextResponse.json({ message: 'Favorit ditambahkan' });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
