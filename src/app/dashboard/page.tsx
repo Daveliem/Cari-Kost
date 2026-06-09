@@ -226,7 +226,7 @@ export default function Dashboard() {
           <p className="mt-4 text-slate-600">Hubungi administrator untuk menjadi owner atau gunakan akun pemilik.</p>
           <div className="mt-8 flex justify-center gap-4">
             <Link href="/" className="rounded-full bg-emerald-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-400">
-              Kembali ke Pencarian 111111
+              Kembali ke Pencarian
             </Link>
             <Link href="/profile" className="rounded-full border border-slate-300 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
               Profil Saya
